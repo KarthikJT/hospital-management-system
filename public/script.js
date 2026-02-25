@@ -1,9 +1,48 @@
 const form = document.getElementById("patientForm");
+const doctorSelect = document.getElementById("doctorSelect");
+const availabilityInput = document.getElementById("availability");
+const feeInput = document.getElementById("fee");
 const table = document.getElementById("patientTable");
 
-window.onload = loadPatients;
+let doctorsData = [];
 
-// ➕ Add Patient
+window.onload = () => {
+    loadDoctors();
+    loadPatients();
+};
+
+// Load Doctors
+async function loadDoctors() {
+    const res = await fetch("/doctors");
+    doctorsData = await res.json();
+
+    doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+
+    doctorsData.forEach(doc => {
+        doctorSelect.innerHTML += `
+            <option value="${doc.id}">
+                ${doc.name} (${doc.specialization})
+            </option>
+        `;
+    });
+}
+
+// When Doctor Changes
+doctorSelect.addEventListener("change", function () {
+    const selectedDoctor = doctorsData.find(
+        doc => doc.id == this.value
+    );
+
+    if (selectedDoctor) {
+        availabilityInput.value = selectedDoctor.availability;
+        feeInput.value = selectedDoctor.consultation_fee;
+    } else {
+        availabilityInput.value = "";
+        feeInput.value = "";
+    }
+});
+
+// Add Patient
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -11,49 +50,39 @@ form.addEventListener("submit", async (e) => {
         name: document.getElementById("name").value,
         age: document.getElementById("age").value,
         gender: document.getElementById("gender").value,
-        disease: document.getElementById("disease").value
+        disease: document.getElementById("disease").value,
+        doctor_id: doctorSelect.value,
+        amount: feeInput.value
     };
 
     await fetch("/add-patient", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patient)
     });
 
     form.reset();
+    availabilityInput.value = "";
+    feeInput.value = "";
     loadPatients();
 });
 
-// 📄 Load Patients
+// Load Patients
 async function loadPatients() {
-    const response = await fetch("/patients");
-    const data = await response.json();
+    const res = await fetch("/patients");
+    const data = await res.json();
 
     table.innerHTML = "";
 
-    data.forEach(patient => {
+    data.forEach(p => {
         table.innerHTML += `
             <tr>
-                <td>${patient.id}</td>
-                <td>${patient.name}</td>
-                <td>${patient.age}</td>
-                <td>${patient.gender}</td>
-                <td>${patient.disease}</td>
-                <td>
-                    <button onclick="deletePatient(${patient.id})">Delete</button>
-                </td>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.disease}</td>
+                <td>${p.doctor_name || "N/A"}</td>
+                <td>${p.amount}</td>
             </tr>
         `;
     });
-}
-
-// ❌ Delete Patient
-async function deletePatient(id) {
-    await fetch(`/delete-patient/${id}`, {
-        method: "DELETE"
-    });
-
-    loadPatients();
 }

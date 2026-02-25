@@ -10,55 +10,50 @@ app.use(express.static("public"));
 
 const db = mysql.createConnection({
     user: "root",
-    password: "karthik@1234", // 🔴 Put your real password
+    password: "karthik@1234",
     database: "hospital_db",
     socketPath: "/tmp/mysql.sock"
 });
 
-db.connect((err) => {
-    if (err) {
-        console.error("❌ Database connection failed:", err);
-    } else {
-        console.log("✅ Connected to MySQL Database");
-    }
+db.connect(err => {
+    if (err) console.error(err);
+    else console.log("✅ Connected to MySQL Database");
 });
 
-// ➕ Add Patient
+// Get Doctors
+app.get("/doctors", (req, res) => {
+    db.query("SELECT * FROM doctors", (err, results) => {
+        if (err) res.status(500).send("Database error");
+        else res.json(results);
+    });
+});
+
+// Add Patient
 app.post("/add-patient", (req, res) => {
-    const { name, age, gender, disease } = req.body;
+    const { name, age, gender, disease, doctor_id, amount } = req.body;
 
-    const sql = "INSERT INTO patients (name, age, gender, disease) VALUES (?, ?, ?, ?)";
+    const sql = `
+        INSERT INTO patients (name, age, gender, disease, doctor_id, amount)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
 
-    db.query(sql, [name, age, gender, disease], (err) => {
-        if (err) {
-            res.status(500).send("Database error");
-        } else {
-            res.json({ message: "Patient added successfully" });
-        }
+    db.query(sql, [name, age, gender, disease, doctor_id, amount], (err) => {
+        if (err) res.status(500).send("Insert error");
+        else res.json({ message: "Patient added successfully" });
     });
 });
 
-// 📄 Get All Patients
+// Get Patients with Doctor Info
 app.get("/patients", (req, res) => {
-    db.query("SELECT * FROM patients", (err, results) => {
-        if (err) {
-            res.status(500).send("Database error");
-        } else {
-            res.json(results);
-        }
-    });
-});
+    const sql = `
+        SELECT patients.*, doctors.name AS doctor_name
+        FROM patients
+        LEFT JOIN doctors ON patients.doctor_id = doctors.id
+    `;
 
-// ❌ Delete Patient
-app.delete("/delete-patient/:id", (req, res) => {
-    const patientId = req.params.id;
-
-    db.query("DELETE FROM patients WHERE id = ?", [patientId], (err) => {
-        if (err) {
-            res.status(500).send("Delete error");
-        } else {
-            res.json({ message: "Patient deleted successfully" });
-        }
+    db.query(sql, (err, results) => {
+        if (err) res.status(500).send("Fetch error");
+        else res.json(results);
     });
 });
 

@@ -6,12 +6,15 @@
 </head>
 <body>
 
-    <h1>🏥 Hospital Management System</h1>
+<div class="container">
 
+<h1>🏥 Advanced Hospital Management</h1>
+
+<div class="card">
     <h2>Add Patient</h2>
 
     <form id="patientForm">
-        <input type="text" id="name" placeholder="Name" required>
+        <input type="text" id="name" placeholder="Patient Name" required>
         <input type="number" id="age" placeholder="Age" required>
 
         <select id="gender" required>
@@ -22,28 +25,36 @@
 
         <input type="text" id="disease" placeholder="Disease" required>
 
+        <select id="doctorSelect" required>
+            <option value="">Select Doctor</option>
+        </select>
+
+        <input type="text" id="availability" placeholder="Availability" readonly>
+        <input type="text" id="fee" placeholder="Consultation Fee" readonly>
+
         <button type="submit">Add Patient</button>
     </form>
+</div>
 
+<div class="card">
     <h2>Patient List</h2>
 
-    <table border="1" cellpadding="5" cellspacing="0">
+    <table>
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
                 <th>Disease</th>
-                <th>Action</th>
+                <th>Doctor</th>
+                <th>Amount</th>
             </tr>
         </thead>
-        <tbody id="patientTable">
-            <!-- Patients will load here -->
-        </tbody>
+        <tbody id="patientTable"></tbody>
     </table>
+</div>
 
-    <script src="script.js"></script>
+</div>
 
+<script src="script.js"></script>
 </body>
 </html>
