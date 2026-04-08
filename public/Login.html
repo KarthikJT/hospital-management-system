@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+        :root {
+            --blue: #1a56db;
+            --green: #1cc88a;
+            --dark: #0f172a;
+            --mid: #334155;
+            --light: #f8fafc;
+            --error: #e74a3b;
+        }
+ 
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+ 
+        /* Animated background blobs */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.25;
+            animation: drift 10s ease-in-out infinite alternate;
+        }
+        .blob-1 { width: 500px; height: 500px; background: var(--blue); top: -150px; left: -100px; animation-delay: 0s; }
+        .blob-2 { width: 400px; height: 400px; background: var(--green); bottom: -100px; right: -100px; animation-delay: 3s; }
+        .blob-3 { width: 300px; height: 300px; background: #7c3aed; top: 40%; left: 40%; animation-delay: 6s; }
+ 
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(40px, 30px) scale(1.05); }
+        }
+ 
+        /* Card */
+        .card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 48px 40px;
+            width: 420px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+            animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+        }
+ 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+ 
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+ 
+        .logo-icon {
+            font-size: 42px;
+            display: block;
+            margin-bottom: 8px;
+        }
+ 
+        .logo h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+ 
+        .logo p {
+            color: rgba(255,255,255,0.45);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+ 
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+ 
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 9px;
+            border-radius: 7px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: rgba(255,255,255,0.45);
+            transition: all 0.25s;
+        }
+ 
+        .tab.active {
+            background: var(--blue);
+            color: white;
+            box-shadow: 0 2px 12px rgba(26,86,219,0.4);
+        }
+ 
+        /* Forms */
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+ 
+        .field {
+            margin-bottom: 16px;
+        }
+ 
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+ 
+        .field input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
+        }
+ 
+        .field input:focus {
+            border-color: var(--blue);
+            background: rgba(26,86,219,0.08);
+        }
+ 
+        .field input::placeholder { color: rgba(255,255,255,0.25); }
+ 
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, var(--blue), #2563eb);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 20px rgba(26,86,219,0.35);
+        }
+ 
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px rgba(26,86,219,0.45);
+        }
+ 
+        .btn-submit:active { transform: translateY(0); }
+ 
+        .msg {
+            margin-top: 14px;
+            font-size: 13px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 7px;
+            display: none;
+        }
+ 
+        .msg.error { background: rgba(231,74,59,0.15); color: #fc8181; border: 1px solid rgba(231,74,59,0.3); }
+        .msg.success { background: rgba(28,200,138,0.15); color: #6ee7b7; border: 1px solid rgba(28,200,138,0.3); }
+    </style>
+</head>
+<body>
+ 
+<div class="bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+</div>
+ 
+<div class="card">
+    <div class="logo">
+        <span class="logo-icon">🏥</span>
+        <h1>Hospital Management</h1>
+        <p>Admin Portal</p>
+    </div>
+ 
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('login')">Login</div>
+        <div class="tab" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+ 
+    <!-- LOGIN -->
+    <div class="form-section active" id="loginSection">
+        <div class="field">
+            <label>Username</label>
+            <input type="text" id="loginUsername" placeholder="Enter your username">
+        </div>
+        <div class="field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your password">
+        </div>
+        <button class="btn-submit" onclick="login()">Login →</button>
+        <div class="msg" id="loginMsg"></div>
+    </div>
+ 
+    <!-- SIGNUP -->
+    <div class="form-section" id="signupSection">
+        <div class="field">
+            <label>Username</label>
+            <input type="text" id="signupUsername" placeholder="Choose a username">
+        </div>
+        <div class="field">
+            <label>Password</label>
+            <input type="password" id="signupPassword" placeholder="Choose a password">
+        </div>
+        <div class="field">
+            <label>Confirm Password</label>
+            <input type="password" id="signupConfirm" placeholder="Repeat your password">
+        </div>
+        <button class="btn-submit" onclick="signup()">Create Account →</button>
+        <div class="msg" id="signupMsg"></div>
+    </div>
+</div>
+ 
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach((t, i) => {
+            t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'signup'));
+        });
+        document.getElementById('loginSection').classList.toggle('active', tab === 'login');
+        document.getElementById('signupSection').classList.toggle('active', tab === 'signup');
+    }
+ 
+    function showMsg(id, text, type) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.className = `msg ${type}`;
+        el.style.display = 'block';
+    }
+ 
+    async function login() {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+ 
+        if (!username || !password) return showMsg('loginMsg', 'Please fill in all fields.', 'error');
+ 
+        const res = await fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+ 
+        const data = await res.json();
+ 
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            showMsg('loginMsg', '✅ Login successful! Redirecting...', 'success');
+            setTimeout(() => window.location.href = '/Index.html', 1000);
+        } else {
+            showMsg('loginMsg', data.message || 'Login failed.', 'error');
+        }
+    }
+ 
+    async function signup() {
+        const username = document.getElementById('signupUsername').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const confirm  = document.getElementById('signupConfirm').value;
+ 
+        if (!username || !password) return showMsg('signupMsg', 'Please fill in all fields.', 'error');
+        if (password !== confirm)   return showMsg('signupMsg', 'Passwords do not match.', 'error');
+        if (password.length < 6)    return showMsg('signupMsg', 'Password must be at least 6 characters.', 'error');
+ 
+        const res = await fetch('/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+ 
+        const data = await res.json();
+ 
+        if (res.ok) {
+            showMsg('signupMsg', '✅ Account created! You can now log in.', 'success');
+            setTimeout(() => switchTab('login'), 1500);
+        } else {
+            showMsg('signupMsg', data.message || 'Signup failed.', 'error');
+        }
+    }
+ 
+    // If already logged in, go straight to dashboard
+    if (localStorage.getItem('token')) window.location.href = '/Index.html';
+</script>
+</body>
+</html>
+ 

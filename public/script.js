@@ -11,6 +11,42 @@ const editIdInput = document.getElementById("editId");
 let doctorsData = [];
 let allPatients = [];
  
+// ─── Auth Guard ───────────────────────────────────────────────
+const token = localStorage.getItem("token");
+if (!token) window.location.href = "/login.html";
+ 
+// Show logged-in username
+const username = localStorage.getItem("username");
+if (username && document.getElementById("loggedInUser")) {
+    document.getElementById("loggedInUser").textContent = `👤 ${username}`;
+}
+ 
+// ─── Helper: Authenticated fetch ─────────────────────────────
+function authFetch(url, options = {}) {
+    return fetch(url, {
+        ...options,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            ...(options.headers || {})
+        }
+    }).then(res => {
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            window.location.href = "/login.html";
+        }
+        return res;
+    });
+}
+ 
+// ─── Logout ───────────────────────────────────────────────────
+function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    window.location.href = "/login.html";
+}
+ 
 window.onload = () => {
     loadDoctors();
     loadPatients();
@@ -18,7 +54,7 @@ window.onload = () => {
  
 // ─── Load Doctors ────────────────────────────────────────────
 async function loadDoctors() {
-    const res = await fetch("/doctors");
+    const res = await authFetch("/doctors");
     doctorsData = await res.json();
  
     doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
@@ -41,7 +77,7 @@ doctorSelect.addEventListener("change", function () {
     }
 });
  
-// ─── Add / Edit Patient (form submit) ────────────────────────
+// ─── Add / Edit Patient ───────────────────────────────────────
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
  
@@ -57,18 +93,14 @@ form.addEventListener("submit", async (e) => {
     const editId = editIdInput.value;
  
     if (editId) {
-        // UPDATE existing patient
-        await fetch(`/update-patient/${editId}`, {
+        await authFetch(`/update-patient/${editId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(patient)
         });
         cancelEdit();
     } else {
-        // ADD new patient
-        await fetch("/add-patient", {
+        await authFetch("/add-patient", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(patient)
         });
     }
@@ -94,7 +126,7 @@ function cancelEdit() {
  
 // ─── Load Patients ───────────────────────────────────────────
 async function loadPatients() {
-    const res = await fetch("/patients");
+    const res = await authFetch("/patients");
     allPatients = await res.json();
     renderTable(allPatients);
 }
@@ -142,10 +174,8 @@ function editPatient(id) {
     const patient = allPatients.find(p => p.id === id);
     if (!patient) return;
  
-    // Scroll to form
     form.scrollIntoView({ behavior: "smooth" });
  
-    // Fill form fields
     editIdInput.value = patient.id;
     document.getElementById("name").value = patient.name;
     document.getElementById("age").value = patient.age;
@@ -153,7 +183,6 @@ function editPatient(id) {
     document.getElementById("disease").value = patient.disease;
     doctorSelect.value = patient.doctor_id;
  
-    // Trigger doctor change to fill availability & fee
     const selectedDoctor = doctorsData.find(doc => doc.id == patient.doctor_id);
     if (selectedDoctor) {
         availabilityInput.value = selectedDoctor.availability;
@@ -170,7 +199,7 @@ async function deletePatient(id) {
     const confirmed = confirm("Are you sure you want to delete this patient?");
     if (!confirmed) return;
  
-    await fetch(`/delete-patient/${id}`, { method: "DELETE" });
+    await authFetch(`/delete-patient/${id}`, { method: "DELETE" });
     loadPatients();
 }
  
