@@ -1,73 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Hospital Management System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCore — Hospital Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
- 
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
 <!-- Top Navbar -->
 <div class="navbar">
-    <span>🏥 Hospital Management</span>
+    <div class="nav-brand">
+        <span class="nav-icon">🏥</span>
+        <span class="nav-title">MediCore HMS</span>
+    </div>
     <div class="nav-right">
-        <span id="loggedInUser"></span>
-        <button class="btn-logout" onclick="logout()">Logout</button>
+        <div class="user-badge">
+            <span class="user-avatar">👨‍⚕️</span>
+            <span id="loggedInUser"></span>
+        </div>
+        <button class="btn-logout" onclick="logout()">⬡ Sign Out</button>
     </div>
 </div>
- 
+
+<!-- Dashboard Stats -->
 <div class="container">
- 
-<div class="card">
-    <h2>Add Patient</h2>
-    <form id="patientForm">
-        <input type="hidden" id="editId">
-        <input type="text" id="name" placeholder="Patient Name" required>
-        <input type="number" id="age" placeholder="Age" required>
- 
-        <select id="gender" required>
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-        </select>
- 
-        <input type="text" id="disease" placeholder="Disease" required>
- 
-        <select id="doctorSelect" required>
-            <option value="">Select Doctor</option>
-        </select>
- 
-        <input type="text" id="availability" placeholder="Availability" readonly>
-        <input type="text" id="fee" placeholder="Consultation Fee" readonly>
- 
-        <button type="submit" id="submitBtn">Add Patient</button>
-        <button type="button" id="cancelBtn" style="display:none; background:#aaa;">Cancel</button>
-    </form>
-</div>
- 
-<div class="card">
-    <h2>Patient List</h2>
-    <input type="text" id="searchInput" placeholder="🔍 Search by name or disease...">
- 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Disease</th>
-                <th>Doctor</th>
-                <th>Amount</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="patientTable"></tbody>
-    </table>
-</div>
- 
-</div>
- 
+    <div class="stats-row">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <div class="stat-value" id="statPatients">0</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+        </div>
+        <div class="stat-card stat-teal">
+            <div class="stat-icon">🩺</div>
+            <div class="stat-info">
+                <div class="stat-value" id="statDoctors">0</div>
+                <div class="stat-label">Doctors</div>
+            </div>
+        </div>
+        <div class="stat-card stat-gold">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+                <div class="stat-value" id="statAppointments">0</div>
+                <div class="stat-label">Appointments</div>
+            </div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <div class="stat-value" id="statCompleted">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Patient -->
+    <div class="card">
+        <div class="card-header">
+            <h2 id="formTitle">➕ Add New Patient</h2>
+            <span class="card-badge" id="formBadge">New Record</span>
+        </div>
+        <form id="patientForm">
+            <input type="hidden" id="editId">
+            <div class="form-grid">
+                <div class="field-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="name" placeholder="Full name" required>
+                </div>
+                <div class="field-group">
+                    <label>Age</label>
+                    <input type="number" id="age" placeholder="Age" min="0" max="150" required>
+                </div>
+                <div class="field-group">
+                    <label>Gender</label>
+                    <select id="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Diagnosis / Disease</label>
+                    <input type="text" id="disease" placeholder="Condition or diagnosis" required>
+                </div>
+                <div class="field-group">
+                    <label>Assign Doctor</label>
+                    <select id="doctorSelect" required onchange="fillDoctorInfo()">
+                        <option value="">Select Doctor</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Availability</label>
+                    <input type="text" id="availability" placeholder="Doctor availability" readonly>
+                </div>
+                <div class="field-group">
+                    <label>Consultation Fee (₹)</label>
+                    <input type="text" id="fee" placeholder="Auto-filled from doctor" readonly>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" id="submitBtn" class="btn-primary">➕ Add Patient</button>
+                <button type="button" id="cancelBtn" class="btn-secondary" style="display:none" onclick="cancelEdit()">✕ Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Patient List -->
+    <div class="card">
+        <div class="card-header">
+            <h2>🧑‍⚕️ Patient Records</h2>
+            <input type="text" id="searchInput" placeholder="🔍 Search name or disease..." class="search-input">
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Disease</th>
+                        <th>Doctor</th>
+                        <th>Fee</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="patientTable">
+                    <tr><td colspan="8" class="empty-row">No patients found.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Book Appointment -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📅 Book Appointment</h2>
+            <span class="card-badge">Scheduling</span>
+        </div>
+        <form id="appointmentForm">
+            <div class="form-grid">
+                <div class="field-group">
+                    <label>Patient</label>
+                    <select id="patientSelect" required>
+                        <option value="">Select Patient</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Doctor</label>
+                    <select id="doctorSelectAppointment" required>
+                        <option value="">Select Doctor</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Date</label>
+                    <input type="date" id="appointmentDate" required>
+                </div>
+                <div class="field-group">
+                    <label>Time Slot</label>
+                    <select id="timeSlot" required>
+                        <option value="">Select Time</option>
+                        <option>09:00 AM</option>
+                        <option>10:00 AM</option>
+                        <option>11:00 AM</option>
+                        <option>12:00 PM</option>
+                        <option>02:00 PM</option>
+                        <option>03:00 PM</option>
+                        <option>04:00 PM</option>
+                        <option>05:00 PM</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">📅 Book Appointment</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Appointments Table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📋 Appointment Records</h2>
+            <select id="statusFilter" onchange="filterAppointments()" class="filter-select">
+                <option value="">All Status</option>
+                <option value="Booked">Booked</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appointmentTable">
+                    <tr><td colspan="7" class="empty-row">No appointments yet.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
 <script src="script.js"></script>
 </body>
 </html>
- 
